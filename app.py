@@ -4,416 +4,296 @@ import plotly.graph_objects as go
 
 # --- Конфигурация страницы Streamlit ---
 st.set_page_config(
-    page_title="LXD & Course Health Monitor",
-    page_icon="🎓",
+    page_title="In-Flight Rescue: Оперативный пульс",
+    page_icon="🚨",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # ==============================================================================
-# 1. СИНТЕТИЧЕСКАЯ МОДЕЛЬ ДАННЫХ
+# 1. СИНТЕТИЧЕСКАЯ БАЗА ДАННЫХ ОПЕРАТИВНОГО КОНТУРА (КОГОРТА: 14 СТУДЕНТОВ)
 # ==============================================================================
 @st.cache_data
-def load_audit_data():
-    # 1.1. Реестр Валидных срезов (N >= 30) для стратегического аудита (без R_market)
-    slice_cols = [
-        "product", "slice_id", "slice_name", "cohorts_included", 
-        "enrolled", "finished", "passed_atask"
+def load_operational_data():
+    # 1.1. Персональные карточки студентов текущего потока на Модуле 2
+    # Включает историю MHI с Модуля 1 и 2, число ошибок и дни задержки ДЗ
+    students_data = [
+        {
+            "id": "ST-101", "name": "Алексей Смирнов",
+            "m1_pacing": "optimal", "m2_pacing": "rushed",
+            "m1_cohesion": "clear", "m2_cohesion": "fragmented",
+            "m1_energy": "high", "m2_energy": "moderate",
+            "error_loops": 4, "problem_step": "Шаг 2.3 (Рекурсия)",
+            "homework_delay_days": 1, "status": "active"
+        },
+        {
+            "id": "ST-102", "name": "Елена Кузнецова",
+            "m1_pacing": "rushed", "m2_pacing": "rushed",
+            "m1_cohesion": "clear", "m2_cohesion": "clear",
+            "m1_energy": "moderate", "m2_energy": "moderate",
+            "error_loops": 0, "problem_step": "-",
+            "homework_delay_days": 4, "status": "active"
+        },
+        {
+            "id": "ST-103", "name": "Дмитрий Попов",
+            "m1_pacing": "optimal", "m2_pacing": "rushed",
+            "m1_cohesion": "confused", "m2_cohesion": "fragmented",
+            "m1_energy": "moderate", "m2_energy": "depleted",
+            "error_loops": 5, "problem_step": "Шаг 2.4 (Бинарный поиск)",
+            "homework_delay_days": 6, "status": "active"
+        },
+        {
+            "id": "ST-104", "name": "Анна Соколова",
+            "m1_pacing": "optimal", "m2_pacing": "optimal",
+            "m1_cohesion": "clear", "m2_cohesion": "clear",
+            "m1_energy": "depleted", "m2_energy": "depleted",
+            "error_loops": 1, "problem_step": "-",
+            "homework_delay_days": 8, "status": "risk_drop"
+        },
+        {
+            "id": "ST-105", "name": "Иван Морозов",
+            "m1_pacing": "slow", "m2_pacing": "slow",
+            "m1_cohesion": "clear", "m2_cohesion": "clear",
+            "m1_energy": "high", "m2_energy": "high",
+            "error_loops": 0, "problem_step": "-",
+            "homework_delay_days": 0, "status": "active"
+        },
+        {
+            "id": "ST-106", "name": "Мария Федорова",
+            "m1_pacing": "rushed", "m2_pacing": "rushed",
+            "m1_cohesion": "clear", "m2_cohesion": "fragmented",
+            "m1_energy": "moderate", "m2_energy": "depleted",
+            "error_loops": 3, "problem_step": "Шаг 2.3 (Рекурсия)",
+            "homework_delay_days": 5, "status": "active"
+        },
+        {
+            "id": "ST-107", "name": "Сергей Новиков",
+            "m1_pacing": "optimal", "m2_pacing": "optimal",
+            "m1_cohesion": "confused", "m2_cohesion": "confused",
+            "m1_energy": "high", "m2_energy": "moderate",
+            "error_loops": 2, "problem_step": "-",
+            "homework_delay_days": 2, "status": "active"
+        },
+        # Студенты в норме
+        {"id": "ST-108", "name": "Ольга Васильева", "m1_pacing": "optimal", "m2_pacing": "optimal", "m1_cohesion": "clear", "m2_cohesion": "clear", "m1_energy": "high", "m2_energy": "high", "error_loops": 0, "problem_step": "-", "homework_delay_days": 0, "status": "active"},
+        {"id": "ST-109", "name": "Павел Ковалев", "m1_pacing": "optimal", "m2_pacing": "optimal", "m1_cohesion": "clear", "m2_cohesion": "clear", "m1_energy": "high", "m2_energy": "moderate", "error_loops": 0, "problem_step": "-", "homework_delay_days": 0, "status": "active"},
+        {"id": "ST-110", "name": "Екатерина Ильина", "m1_pacing": "optimal", "m2_pacing": "optimal", "m1_cohesion": "clear", "m2_cohesion": "clear", "m1_energy": "high", "m2_energy": "high", "error_loops": 0, "problem_step": "-", "homework_delay_days": 0, "status": "active"},
+        {"id": "ST-111", "name": "Михаил Титов", "m1_pacing": "optimal", "m2_pacing": "rushed", "m1_cohesion": "clear", "m2_cohesion": "clear", "m1_energy": "high", "m2_energy": "moderate", "error_loops": 1, "problem_step": "-", "homework_delay_days": 1, "status": "active"},
+        {"id": "ST-112", "name": "Наталья Козлова", "m1_pacing": "optimal", "m2_pacing": "optimal", "m1_cohesion": "clear", "m2_cohesion": "clear", "m1_energy": "moderate", "m2_energy": "moderate", "error_loops": 0, "problem_step": "-", "homework_delay_days": 0, "status": "active"},
+        {"id": "ST-113", "name": "Артем Семенов", "m1_pacing": "optimal", "m2_pacing": "optimal", "m1_cohesion": "clear", "m2_cohesion": "clear", "m1_energy": "high", "m2_energy": "high", "error_loops": 0, "problem_step": "-", "homework_delay_days": 0, "status": "active"},
+        {"id": "ST-114", "name": "Дарья Воробьева", "m1_pacing": "optimal", "m2_pacing": "optimal", "m1_cohesion": "clear", "m2_cohesion": "clear", "m1_energy": "high", "m2_energy": "high", "error_loops": 0, "problem_step": "-", "homework_delay_days": 0, "status": "active"},
     ]
-    slice_rows = [
-        # Продукт 1: Крупные когорты (каждый поток N=40..45 сразу формирует валидный срез)
-        ["Data Science (Крупные когорты)", "DS_S1", "Срез 1 [Поток 1]", "Поток 1", 45, 28, 24],
-        ["Data Science (Крупные когорты)", "DS_S2", "Срез 2 [Поток 2]", "Поток 2", 42, 27, 24],
-        
-        # Продукт 2: Малые когорты (10..15 чел., срез накопился за Потоки 1-3)
-        ["Веб-разработка (Малые когорты)", "WEB_S1", "Срез 1 [Потоки 1–3]", "Потоки 1, 2, 3", 39, 21, 14]
-    ]
-    df_slices = pd.DataFrame(slice_rows, columns=slice_cols)
-    df_slices["cr"] = df_slices["finished"] / df_slices["enrolled"]
-    df_slices["a_task"] = df_slices["passed_atask"] / df_slices["finished"]
-    df_slices["hi_core"] = df_slices["cr"] * df_slices["a_task"]
-    
-    def calc_status(hi):
-        if hi >= 0.50:
-            return "🟢 Здоровый"
-        elif hi >= 0.30:
-            return "🟡 Зона риска"
-        return "🔴 Критический"
-    df_slices["status"] = df_slices["hi_core"].map(calc_status)
+    df_st = pd.DataFrame(students_data)
+    return df_st
 
-    # 1.2. Реестр потоков в процессе (In-Flight) для оперативного контура
-    inflight_cols = ["product", "cohort_name", "enrolled", "finished", "status_desc"]
-    inflight_rows = [
-        ["Data Science (Крупные когорты)", "Поток 2 (Текущий)", 42, 27, "Поток завершен, сформировал Срез 2 (N=42)"],
-        ["Веб-разработка (Малые когорты)", "Поток 4 (В процессе)", 12, 7, "Идет накопление выборки в Срез 2 (12 из 30 чел.)"]
-    ]
-    df_inflight = pd.DataFrame(inflight_rows, columns=inflight_cols)
-
-    # 1.3. Помодульная телеметрия (SLA удален, добавлен бенчмарк прошлого среза)
-    mod_cols = [
-        "product", "cohort_name", "module_num", "module_name",
-        "cor", "baseline_cor", "drop_count", "rushed_count", "frag_count", "depleted_count",
-        "error_loops_3", "csi", "lxd_factor", "root_cause_analysis"
-    ]
-    mod_rows = [
-        # Data Science (Поток 2 - крупная группа)
-        ["Data Science (Крупные когорты)", "Поток 2 (Текущий)", 1, "M1: Введение и базовый Python", 0.95, 0.96, 2, 3, 1, 1, 1, 4.8, "Субъективный контроль", "Штатный старт, ранняя победа в первые 15 минут."],
-        ["Data Science (Крупные когорты)", "Поток 2 (Текущий)", 2, "M2: Высшая математика и Линал", 0.78, 0.82, 7, 12, 6, 5, 8, 3.8, "Посторонняя нагрузка", "Высокая плотность формул без пошаговых разобранных примеров."],
-        ["Data Science (Крупные когорты)", "Поток 2 (Текущий)", 3, "M3: Машинное обучение (ML)", 0.69, 0.73, 4, 8, 4, 5, 5, 4.2, "Субъективный контроль", "Умеренная сложность, практика поддержана шаблонами."],
-        ["Data Science (Крупные когорты)", "Поток 2 (Текущий)", 4, "M4: Аутентичный дипломный кейс", 0.64, 0.62, 2, 5, 3, 4, 3, 4.5, "Субъективная ценность", "Высокая мотивация решения боевого индустриального кейса."],
-
-        # Веб-разработка (Поток 4 - малая группа, 12 человек)
-        ["Веб-разработка (Малые когорты)", "Поток 4 (В процессе)", 1, "M1: HTML/CSS и Семантика", 1.00, 0.95, 0, 1, 0, 0, 0, 4.8, "Субъективный контроль", "Низкий входной барьер, все студенты в графике."],
-        ["Веб-разработка (Малые когорты)", "Поток 4 (В процессе)", 2, "M2: JavaScript: Асинхронность и DOM", 0.67, 0.72, 4, 5, 4, 3, 5, 3.2, "Субъективный контроль & Срывы", "Разрыв между лекциями и ДЗ. Серии 3+ ошибок рождают безнадежность и срыв."],
-        ["Веб-разработка (Малые когорты)", "Поток 4 (В процессе)", 3, "M3: Архитектура React и API", 0.58, 0.60, 1, 4, 2, 3, 3, 3.6, "Посторонняя нагрузка", "Шлейф несданных долгов с Модуля 2; синдром накопленной усталости."],
-        ["Веб-разработка (Малые когорты)", "Поток 4 (В процессе)", 4, "M4: Финальный аутентичный проект", 0.58, 0.54, 0, 2, 2, 2, 2, 4.0, "Субъективный контроль", "Сложности с самостоятельной декомпозицией ТЗ без поддержки."]
-    ]
-    df_modules = pd.DataFrame(mod_rows, columns=mod_cols)
-    df_modules["cor_label"] = df_modules["cor"].map(lambda x: f"{x:.0%}")
-    df_modules["baseline_label"] = df_modules["baseline_cor"].map(lambda x: f"{x:.0%}")
-    return df_slices, df_inflight, df_modules
-
-df_slices, df_inflight, df_modules = load_audit_data()
+df_students = load_operational_data()
 
 # ==============================================================================
-# 2. БОКОВАЯ ПАНЕЛЬ: ВЫБОР ПРОДУКТА И СПРАВОЧНИК
+# 2. РАСЧЕТ ОПЕРАТИВНЫХ АГРЕГАТОВ ДЛЯ ОБРПРОДАКТА
 # ==============================================================================
-st.sidebar.title("🎛 Навигация аудита")
+total_cohort = len(df_students)
 
-available_products = df_slices["product"].unique().tolist()
-selected_product = st.sidebar.selectbox("Выберите продукт для анализа:", available_products)
+# Доли аномалий текущего модуля (Модуль 2)
+pct_rushed = round((len(df_students[df_students["m2_pacing"] == "rushed"]) / total_cohort) * 100)
+pct_fragmented = round((len(df_students[df_students["m2_cohesion"] == "fragmented"]) / total_cohort) * 100)
+pct_depleted = round((len(df_students[df_students["m2_energy"] == "depleted"]) / total_cohort) * 100)
+pct_backlog = round((len(df_students[df_students["homework_delay_days"] >= 3]) / total_cohort) * 100)
+pct_error_loops = round((len(df_students[df_students["error_loops"] >= 3]) / total_cohort) * 100)
 
-prod_slices = df_slices[df_slices["product"] == selected_product].copy()
-prod_inflight = df_inflight[df_inflight["product"] == selected_product].iloc[0]
-prod_modules = df_modules[df_modules["product"] == selected_product].copy()
+# Движок выбора сценария для Обрпродакта
+if pct_fragmented >= 20 and pct_error_loops >= 20:
+    scenario_id = "SCENARIO_B"
+    scenario_title = "Сценарий Б: «Методический тупик» (Разрыв лекций и практики)"
+    pitstop_format = "«Aha!-разбор и антипаттерны» (30–45 мин)"
+    expert_focus = "Разобрать Шаг 2.3 и 2.4, показать 2 главные типовые ошибки, восстановить ментальную модель задачи."
+    chat_draft = """📢 Коллеги, привет!
+
+Видим по пульс-опросу, что практические задания Модуля 2 (особенно рекурсия и поиск) вызвали много трудностей. Это действительно один из самых концептуально сложных шагов курса, споткнуться здесь — абсолютно нормально!
+
+Завтра в 19:00 мск мы проведем короткую Пит-стоп сессию на 35 минут:
+• Ведущий эксперт разберет 2 главные ошибки, на которых все споткнулись.
+• Покажет правильный ход рассуждений и логику решения.
+• Ответит на любые вопросы в прямом эфире.
+
+⏳ Дедлайн по домашнему заданию сдвигаем на +2 дня, чтобы вы спокойно применили разбор. Запись и шпаргалка обязательно будут!"""
+
+elif pct_rushed >= 30 and pct_backlog >= 35:
+    scenario_id = "SCENARIO_A"
+    scenario_title = "Сценарий А: «Завал объемом» (Перегруз хронометража)"
+    pitstop_format = "«Совместный разгон (Live Case Sprint)» (30–45 мин)"
+    expert_focus = "Открыть задание ДЗ и в прямом эфире написать первые 40% кода, убрав рутину."
+    chat_draft = """📢 Друзья, привет!
+
+Видим, что темп недели оказался слишком плотным и многие не успевают зафиналить практику.
+
+Чтобы снять напряжение, сегодня в 19:30 собираемся на 30-минутный Live Sprint:
+• Вместе с экспертом напишем стартовый каркас проекта (первые 40% задачи).
+• Разберем лайфхаки, чтобы не тратить часы на рутину.
+
+⏳ Общий дедлайн модуля продлен на 2 дня. Ждем всех!"""
+
+elif pct_depleted >= 25:
+    scenario_id = "SCENARIO_C"
+    scenario_title = "Сценарий В: «Кризис сил и выгорание»"
+    pitstop_format = "«Снятие прессинга и приоритизация» (30 мин)"
+    expert_focus = "Разделить ДЗ на 'Обязательное ядро' (на зачет) и 'Факультатив'. Снять прессинг дедлайна."
+    chat_draft = """📢 Ребята, внимание!
+
+Пульс-опрос показал, что группа сильно вымоталась на этом модуле. Мы вас слышим: ваша энергия важнее идеальной сдачи в срок.
+
+Что мы делаем прямо сейчас:
+1. Выделяем в ДЗ *Обязательное ядро* (для зачета достаточно сдать только его).
+2. Остальную часть переводим в статус *Факультативно* (по желанию).
+3. Объявляем 3 дня разгрузки без новых тем. Отдышитесь, мы с вами!"""
+else:
+    scenario_id = "NORMAL"
+    scenario_title = "Штатный режим: Аномалий не зафиксировано"
+    pitstop_format = "Групповое вмешательство не требуется"
+    expert_focus = "Модуль усваивается в нормативном коридоре."
+    chat_draft = "Группа движется штатно. Интервенция не требуется."
+
+# ==============================================================================
+# 3. БОКОВАЯ ПАНЕЛЬ И СВЕДЕНИЯ О КОГОРТЕ
+# ==============================================================================
+st.sidebar.title("🎛 Оперативный контекст")
+selected_product = st.sidebar.selectbox("Продукт:", ["Data Science (Рескилл B2C)"])
+selected_cohort = st.sidebar.selectbox("Поток:", ["Поток 4 (Активный, 14 чел.)"])
+selected_module = st.sidebar.selectbox("Анализируемый модуль:", ["Модуль 2: Алгоритмы и структуры данных"])
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("🛡 Статус выборки продукта")
-if "Крупные" in selected_product:
-    st.sidebar.success("🟢 **Крупные когорты (N ≥ 40):**\nКаждый поток сразу формирует валидный срез. Стратегический аудит доступен по каждому запуску.")
-else:
-    st.sidebar.warning(f"🟡 **Малые когорты (10–15 чел.):**\n{prod_inflight['status_desc']}")
-    st.sidebar.caption("Стратегический аудит курса рассчитывается только по накопленному Срезу 1 (N=39). В текущем Потоке 4 активен только оперативный пульс.")
+st.sidebar.markdown("""
+**Нормативы оперативного контура:**
+* 🔴 **Pacing (Спешка):** порог $> 30\%$
+* 🔴 **Cohesion (Хаос):** порог $> 20\%$
+* 🔴 **Energy (Истощение):** порог $> 25\%$
+* 🔴 **Backlog (Долг $\ge 3$ дн.):** порог $> 35\%$
+""")
 
-with st.sidebar.expander("📖 Памятка по метрикам и зонам", expanded=False):
-    st.markdown("""
-    **Ядро здоровья ($HI_{\\text{core}}$):**
-    * Формула: $CR \\times A_{\\text{task}}$
-    * Смысл: реальная доля от всех зачисленных, кто дошел и самостоятельно решил боевой кейс.
-    * Пороги: 🟢 $\ge 0.50$ (Здоровый) | 🟡 $0.30–0.49$ (Зона риска) | 🔴 $< 0.30$ (Критический).
+# ==============================================================================
+# 4. ВЕРХНИЙ СВЕТОФОРНЫЙ БАННЕР (ЕСТЬ ЛИ ПРОБЛЕМА?)
+# ==============================================================================
+st.title("🚨 In-Flight Rescue: Оперативный пульс потока")
 
-    **MHI (Module Health Index):**
-    * *Pacing (Ритм):* перегруз объемом/хронометражем (сигнал: $\ge 3$ чел. спешат).
-    * *Cohesion (Связность):* методический разрыв лекций и практики (сигнал: $\ge 2$ чел. в хаосе).
-    * *Energy (Ресурс):* выгорание и тихий отток (сигнал: $\ge 2$ чел. в истощении).
+# Определение глобального статуса
+is_critical = (scenario_id != "NORMAL") or (len(df_students[df_students["homework_delay_days"] >= 6]) >= 2)
 
-    **Серии $\ge 3$ ошибок:**
-    * Студент уперся в барьер и начинает приписывать вину себе («я не технарь»), что ведет к закрытию вкладки.
+if is_critical:
+    st.error(f"""
+    ### 🔴 ТРЕБУЕТСЯ ВМЕШАТЕЛЬСТВО НА МОДУЛЕ 2!
+    * **Где сбой:** 29% группы в методическом тупике (Хаос) | 36% не успевают по темпу | 4 студента требуют адресной помощи.
+    * **Что делать:** Обрпродакту — запустить **{pitstop_format}** | Кураторам — отработать 4 карточки в очереди ниже.
     """)
+else:
+    st.success("### 🟢 ПОТОК ДВИЖЕТСЯ ШТАТНО: Критических аномалий нет, вмешательство не требуется.")
 
 # ==============================================================================
-# 3. ОСНОВНОЙ ЭКРАН
+# 5. ДВЕ РОЛЕВЫЕ ВКЛАДКИ
 # ==============================================================================
-st.title("🎓 Система аудита образовательных продуктов (LXD & Health Monitor)")
-st.caption(f"Продукт: **{selected_product}** | Концепция: Управление когнитивным ресурсом и эмоциональной динамикой учащегося")
-
-tab1, tab2, tab3 = st.tabs([
-    "⚡ Вкладка 1: Оперативный пульс (Продакт + Сопровождение)",
-    "🎯 Вкладка 2: Аудит качества курса (Продакт + Продюсер + Методолог)",
-    "🔬 Вкладка 3: Аналитика и гипотезы (Методологи + Аналитики)"
+tab_product, tab_curator = st.tabs([
+    "👨‍💼 Кабинет Обрпродакта: Групповой сбой и Пит-стоп сессия",
+    "🧑‍🏫 Очередь Куратора: Персональный Closed-Loop (4 студента)"
 ])
 
 # ==============================================================================
-# ВКЛАДКА 1: ОПЕРАТИВНЫЙ ПУЛЬС (ДЛЯ ТЕКУЩЕГО ПОТОКА)
+# ВКЛАДКА 1: ОБРПРОДАКТ (ГРУППОВОЙ УРОВЕНЬ)
 # ==============================================================================
-with tab1:
-    st.subheader(f"📍 Оперативный пульс: {prod_inflight['cohort_name']}")
-    st.caption("Здесь отслеживается состояние текущей группы прямо сейчас. Главная цель — спасти отстающих и предотвратить отток на этой неделе.")
+with tab_product:
+    st.subheader("1. Где проблема в когорте? (Замер риска)")
+    st.caption("Показывает процент активной группы (N=14), попавший под действие негативных факторов.")
 
-    # Верхние KPI текущего потока в абсолютных значениях
-    k1, k2, k3, k4 = st.columns(4)
-    k1.metric("Зачислено на поток", f"{prod_inflight['enrolled']} чел.")
-    k2.metric("Активных студентов", f"{prod_inflight['finished']} из {prod_inflight['enrolled']}")
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric("Спешат (Pacing)", f"{pct_rushed}%", delta="Перегруз" if pct_rushed >= 30 else "Норма", delta_color="inverse")
+    c2.metric("Хаос (Cohesion)", f"{pct_fragmented}%", delta="Разрыв логики" if pct_fragmented >= 20 else "Норма", delta_color="inverse")
+    c3.metric("Истощены (Energy)", f"{pct_depleted}%", delta="Выгорание" if pct_depleted >= 25 else "Норма", delta_color="inverse")
+    c4.metric("Долг ДЗ ≥ 3 дн.", f"{pct_backlog}%", delta="Задержка" if pct_backlog >= 35 else "Норма", delta_color="inverse")
+    c5.metric("Петли ≥ 3 ошибок", f"{pct_error_loops}%", delta="Срыв" if pct_error_loops >= 20 else "Норма", delta_color="inverse")
+
+    st.markdown("---")
+
+    st.subheader("2. Что делать обрпродакту? (Готовое управленческое решение)")
     
-    total_loops = int(prod_modules["error_loops_3"].sum())
-    k3.metric(
-        "Петли ≥ 3 ошибок", 
-        f"{total_loops} инцидентов", 
-        delta="Порог срыва CVT" if total_loops > 4 else "В норме", 
-        delta_color="inverse"
-    )
+    with st.container(border=True):
+        st.markdown(f"### 🎯 Рекомендуемое действие: **{pitstop_format}**")
+        st.markdown(f"**Диагноз учебной среды:** `{scenario_title}`")
+        st.info(f"**Фокус ведущего эксперта на эфире:** {expert_focus}")
 
-    crit_depleted = int(prod_modules["depleted_count"].max())
-    k4.metric(
-        "Пик истощения на модуль", 
-        f"{crit_depleted} чел.", 
-        delta="Риск тихого оттока" if crit_depleted >= 2 else "В норме", 
-        delta_color="inverse"
-    )
-
-    st.markdown("---")
-
-    # Блок 1. Воронка со сравнением с прошлым срезом
-    st.markdown("#### 📉 1. Воронка удержания по модулям: текущий поток vs прошлый срез")
-    st.caption("**Что мы здесь видим:** Синие столбцы — удержание текущего потока. Серые маркеры — исторический бенчмарк прошлого валидного среза.")
-
-    fig_cor = go.Figure()
-    # Фоновый бенчмарк (прошлый срез)
-    fig_cor.add_trace(go.Bar(
-        x=prod_modules["module_name"],
-        y=prod_modules["baseline_cor"],
-        name="Прошлый срез (Бенчмарк)",
-        marker_color="#D5DBDB",
-        opacity=0.7,
-        text=prod_modules["baseline_label"],
-        textposition="outside"
-    ))
-    # Текущий поток
-    fig_cor.add_trace(go.Bar(
-        x=prod_modules["module_name"],
-        y=prod_modules["cor"],
-        name="Текущий поток",
-        marker_color="#2980B9",
-        text=prod_modules["cor_label"],
-        textposition="inside"
-    ))
-    fig_cor.update_layout(
-        barmode="group",
-        yaxis=dict(range=[0, 1.18], tickformat=".0%"),
-        height=350,
-        margin=dict(t=20, b=20, l=20, r=20),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-    )
-    st.plotly_chart(fig_cor, use_container_width=True)
-
-    with st.expander("💡 Что значат эти данные и что делать ответственному?"):
-        st.markdown("""
-        * **Что значит:** если синий столбец текущего потока заметно ниже серого бенчмарка (как на Модуле 2), в текущей группе возник аномальный затык, которого не было в прошлых потоках.
-        * **Что делать продюсеру / тьютору:** не ждать конца курса. Если разрыв $> 5\%$, немедленно связаться с отстающими студентами модуля и выяснить, на каком конкретно практическом шаге они застряли.
-        """)
-
-    st.markdown("---")
-
-    # Блок 2. Сигналы MHI
-    st.markdown("#### 🚨 2. Сигналы MHI и телеметрия платформы (число голосов)")
-    st.caption("**Что мы здесь видим:** Абсолютное число студентов, сообщивших о проблемах на пит-стопе в конце модуля.")
-    
-    table_view = prod_modules[["module_name", "rushed_count", "frag_count", "depleted_count", "error_loops_3", "csi"]].copy()
-    table_view.columns = ["Модуль", "Спешат (чел.)", "Разрыв связности (чел.)", "Истощены (чел.)", "Петли 3+ ошибок", "CSI (1-5)"]
-    st.dataframe(
-        table_view.set_index("Модуль"),
-        column_config={
-            "Спешат (чел.)": st.column_config.NumberColumn(help="MHI Pacing: перегруз объемом"),
-            "Разрыв связности (чел.)": st.column_config.NumberColumn(help="MHI Cohesion: разрыв связки теории и практики"),
-            "Истощены (чел.)": st.column_config.NumberColumn(help="MHI Energy: угроза тихого оттока"),
-            "Петли 3+ ошибок": st.column_config.NumberColumn(help="Серии безуспешных отправок подряд"),
-            "CSI (1-5)": st.column_config.NumberColumn(format="%.1f")
-        },
-        use_container_width=True
-    )
-
-    st.markdown("---")
-
-    # Блок 3. Задачи сопровождения по модулям (Аккордеон)
-    st.markdown("#### 🛠 3. Задачи службы сопровождения по модулям (Closed-Loop)")
-    st.caption("**Что мы здесь видим:** Готовый список прицельных действий для тьюторов и кураторов по каждому модулю текущей программы.")
-
-    for _, mod in prod_modules.iterrows():
-        has_critical = (mod["depleted_count"] >= 2) or (mod["error_loops_3"] >= 3) or (mod["frag_count"] >= 2)
-        status_icon = "🔴" if has_critical else "🟢"
+        st.markdown("#### 💬 Готовый текст анонса для чата группы (скопируйте и отправьте):")
+        st.text_area("Текст анонса в Telegram-чат потока:", value=chat_draft, height=230)
         
-        with st.expander(f"{status_icon} **{mod['module_name']}** — (Истощены: {mod['depleted_count']} чел., Петли ошибок: {mod['error_loops_3']})"):
-            if has_critical:
-                st.error(f"**Внимание:** На модуле обнаружен методический или ресурсный кризис! ({mod['root_cause_analysis']})")
-                st.markdown(f"""
-                **План действий для куратора/тьютора на ближайшие 24–48 часов:**
-                1. 📞 **Адресный контакт:** написать лично студентам, отметившим истощение ({mod['depleted_count']} чел.) и совершившим серии ошибок ({mod['error_loops_3']} инцидентов).
-                2. 🤝 **Разбор затыка:** предложить индивидуальный разбор сложной задачи или предоставить дополнительную подсказку/пример решения.
-                3. ⏸ **Снятие прессинга:** при угрозе ухода согласовать индивидуальный график сдачи без штрафа дедлайном.
-                """)
-            else:
-                st.success("Модуль пройден штатно. Критических алертов нет, вмешательство тьютора не требуется.")
+        btn_col1, btn_col2 = st.columns([1, 4])
+        with btn_col1:
+            if st.button("✅ Запустить интервенцию", type="primary"):
+                st.success("Интервенция запущена: дедлайн сдвинут на +2 дня в LMS, задача на эфир передана эксперту.")
+        with btn_col2:
+            st.caption("Нажатие автоматически сдвигает системный дедлайн модуля в расписании LMS и отправляет бриф эксперту.")
 
 # ==============================================================================
-# ВКЛАДКА 2: АУДИТ КАЧЕСТВА КУРСА (ДЛЯ ПРОДАКТА, ПРОДЮСЕРА, МЕТОДОЛОГА)
+# ВКЛАДКА 2: КУРАТОР (ПЕРСОНАЛЬНЫЙ CLOSED-LOOP)
 # ==============================================================================
-with tab2:
-    st.subheader("🎯 Стратегический аудит курса: Валидные срезы")
-    st.caption("Данные очищены от случайных бытовых колебаний малых групп ($N \\ge 30$). Показывают истинное методическое здоровье программы.")
+with tab_curator:
+    st.subheader("📋 Очередь адресного спасения студентов (Приоритет: Высокий)")
+    st.caption("Куратор не ищет причины — система выделила студентов с когнитивными и ресурсными сбоями, поставила диагноз и подготовила текст сообщения.")
 
-    selected_slice_name = st.selectbox(
-        "Выберите Валидный срез для детального аудита:",
-        prod_slices["slice_name"].tolist()
-    )
-    slice_data = prod_slices[prod_slices["slice_name"] == selected_slice_name].iloc[0]
+    # Логика выделения студентов под риском
+    flagged_students = []
+    for _, s in df_students.iterrows():
+        reasons = []
+        priority = "🟡 Средний"
+        action = ""
+        tg_draft = ""
 
-    # Верхние карточки здоровья среза (без R_market)
-    s1, s2, s3 = st.columns(3)
-    s1.metric("Методическое ядро (HI_core)", f"{slice_data['hi_core']:.1%}", slice_data["status"], help="CR × A_task: сквозной выход специалистов")
-    s2.metric("Доходимость (CR)", f"{slice_data['cr']:.1%}", f"{slice_data['finished']} из {slice_data['enrolled']} чел.", help="Доля зачисленных, дошедших до финала")
-    s3.metric("Сдача задачи (A_task)", f"{slice_data['a_task']:.1%}", f"{slice_data['passed_atask']} из {slice_data['finished']} чел.", help="Доля финалистов, сдавших кейс")
+        # Проверка триггеров
+        if s["error_loops"] >= 3:
+            reasons.append(f"Серия {s['error_loops']} ошибок на {s['problem_step']}")
+            priority = "🔴 Критический"
+            action = "Снять вину за ошибку, дать наводящую подсказку (Scaffolding)"
+            tg_draft = f"Привет, {s['name'].split()[0]}! Заметил, что на {s['problem_step']} возник тупик. Не переживай — это одно из самых коварных мест модуля, здесь спотыкаются почти все. Подсказать логику решения или разобрать ход мысли вместе?"
 
-    st.markdown("---")
+        if s["m1_pacing"] == "rushed" and s["m2_pacing"] == "rushed":
+            reasons.append("Хроническая спешка (2 модуля подряд)")
+            action = "Аудит учебного времени, снятие факультативов, мягкий дедлайн"
+            tg_draft = f"Привет, {s['name'].split()[0]}! Вижу по пульс-опросу, что тебе уже второй модуль приходится сильно спешить. Давай пересмотрим нагрузку: я помогу выделить обязательный минимум, а второстепенную часть временно отложим, чтобы ты не выгорал(а)."
 
-    col_funnel, col_comp_slices = st.columns([1, 1])
+        if s["m1_energy"] == "depleted" and s["m2_energy"] == "depleted":
+            reasons.append("Хроническое истощение (2 модуля подряд)")
+            priority = "🔴 Критический"
+            action = "Антикризисный созвон: предложить реструктуризацию долгов или академический отпуск"
+            tg_draft = f"Привет, {s['name'].split()[0]}! Вижу, что силы совсем на исходе. Твое состояние сейчас важнее любых дедлайнов. Давай созвонимся на 10 минут голосом? Подберем индивидуальный график или оформим небольшую паузу без потери прогресса."
 
-    with col_funnel:
-        st.markdown("#### 1. Воронка трансформации студента")
-        st.caption("**Что мы здесь видим:** Сквозное движение учащихся от зачисления до подтверждения квалификации.")
+        if s["homework_delay_days"] >= 5 and "Серия" not in " ".join(reasons):
+            reasons.append(f"Академический долг: {s['homework_delay_days']} дней")
+            action = "Уточнить причину задержки, зафиксировать индивидуальный срок"
+            tg_draft = f"Привет, {s['name'].split()[0]}! Вижу, что сдача домашнего задания задерживается на {s['homework_delay_days']} дней. Все ли в порядке? Нужна помощь эксперта или бытовой завал на работе?"
 
-        # Строим понятную воронку вместо абстрактного графика с линией 60%
-        funnel_fig = go.Figure(go.Funnel(
-            y=["Зачислено на курс", "Дошли до финала (CR)", "Защитили кейс (HI)"],
-            x=[slice_data["enrolled"], slice_data["finished"], slice_data["passed_atask"]],
-            textinfo="value+percent initial",
-            marker=dict(color=["#34495E", "#2980B9", "#27AE60"])
-        ))
-        funnel_fig.update_layout(height=340, margin=dict(t=20, b=20, l=20, r=20))
-        st.plotly_chart(funnel_fig, use_container_width=True)
+        if reasons:
+            flagged_students.append({
+                "student": s,
+                "priority": priority,
+                "reasons": reasons,
+                "action": action,
+                "tg_draft": tg_draft
+            })
 
-        with st.expander("💡 Как читать воронку и целевые пороги?"):
-            st.markdown("""
-            * **Нормативные ориентиры:**
-              * Доходимость ($CR$): здоровая норма $\ge 60\%$.
-              * Сдача задачи ($A_{\\text{task}}$): здоровая норма $\ge 75\%$ от дошедших.
-              * Сквозной выход ($HI$): здоровая норма $\ge 45–50\%$ от зачисленных.
-            * **Что делать:** если на этапе $CR$ отваливается $> 40\%$ — проблема в темпе и хронометраже. Если $CR$ высокий, но итоговый кейс сдают мало — на курсе «иллюзия доходимости», нужна более строгая промежуточная практика.
-            """)
+    # Сортировка: сначала критические
+    flagged_students.sort(key=lambda x: 0 if "🔴" in x["priority"] else 1)
 
-    with col_comp_slices:
-        st.markdown("#### 2. Сравнение Валидных срезов программы")
-        st.caption("**Что мы здесь видим:** Динамика качества между циклами жизни курса (поколениями программы).")
+    # Отрисовка карточек студентов
+    for item in flagged_students:
+        s = item["student"]
+        with st.container(border=True):
+            head_col1, head_col2, head_col3 = st.columns([2, 1, 1])
+            head_col1.markdown(f"### 👤 **{s['name']}** `(ID: {s['id']})`")
+            head_col2.markdown(f"**Приоритет:** {item['priority']}")
+            head_col3.markdown(f"**Долг ДЗ:** `{s['homework_delay_days']} дн.` | Ошибок: `{s['error_loops']}`")
 
-        if len(prod_slices) >= 2:
-            fig_slices = go.Figure()
-            fig_slices.add_trace(go.Bar(x=prod_slices["slice_name"], y=prod_slices["cr"], name="Доходимость (CR)", marker_color="#2980B9"))
-            fig_slices.add_trace(go.Bar(x=prod_slices["slice_name"], y=prod_slices["a_task"], name="Сдача кейса (A_task)", marker_color="#27AE60"))
-            fig_slices.add_trace(go.Bar(x=prod_slices["slice_name"], y=prod_slices["hi_core"], name="Итоговый HI", marker_color="#2C3E50"))
-            fig_slices.update_layout(
-                barmode="group",
-                yaxis=dict(range=[0, 1.15], tickformat=".0%"),
-                height=340,
-                margin=dict(t=20, b=20, l=20, r=20),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
-            )
-            st.plotly_chart(fig_slices, use_container_width=True)
-        else:
-            st.info("Для данного продукта сформирован 1 Валидный срез. Сравнение срезов активируется после завершения набора данных в Срез 2.")
-            prog = min(1.0, 12 / 30.0)
-            st.progress(prog)
-            st.caption(f"Прогресс накопления Среза 2: 12 из 30 студентов ({prog:.0%})")
+            st.markdown(f"**Сработавшие триггеры:** {', '.join(item['reasons'])}")
+            st.markdown(f"**🎯 Что сделать куратору (SLA 24ч):** {item['action']}")
 
-        with st.expander("💡 Что значат срезы для методиста и продюсера?"):
-            st.markdown("""
-            * **Что значит:** валидные срезы сглаживают шум отдельных групп. Если $HI$ растет от среза к срезу — продуктовые доработки дают реальный результат.
-            * **Что делать:** сопоставлять даты методических релизов с границами срезов. Защищать результаты редизайна перед руководством именно на данных срезов.
-            """)
+            with st.expander("💬 Шаблон сообщения в Telegram (нажмите, чтобы скопировать)", expanded=True):
+                st.code(item["tg_draft"], language="text")
 
-    st.markdown("---")
-
-    # Верхнеуровневый аудит образовательной среды (LXD)
-    with st.container(border=True):
-        st.markdown("### 🏛 Архитектурный диагноз образовательной среды (LXD)")
-        st.markdown(f"**Анализируемый срез:** `{slice_data['slice_name']}` (Объем выборки: **{slice_data['enrolled']} студентов**)")
-
-        col_d1, col_d2 = st.columns(2)
-        with col_d1:
-            st.markdown("#### 🔍 Состояние параметров образовательной среды:")
-            if "Малые" in selected_product:
-                st.markdown("""
-                * **Субъективный контроль (Критический сбой):** на Модуле 2 студенты массово теряют понимание перехода от теории к коду. Размытые критерии сдачи обнуляют ощущение контроля.
-                * **Безопасность проб и эмоциональная динамика (Порог оттока):** серии $\ge 3$ ошибок подряд смещают атрибуцию на личность («я не технарь»), запуская уход.
-                * **Посторонняя когнитивная нагрузка:** дефицит готовых стартовых шаблонов перегружает рабочую память рутиной.
-                """)
-            else:
-                st.markdown("""
-                * **Посторонняя нагрузка (Зона риска):** скачок плотности формул на Модуле 2 приводит к перегрузу хронометража (12 жалоб на спешку).
-                * **Субъективный контроль:** устойчив, но требует поддержки на стыке математики и алгоритмов.
-                * **Субъективная ценность:** высокая — аутентичный проект высоко мотивирует студентов.
-                """)
-
-        with col_d2:
-            st.markdown("#### 🛠 Системные направления доработки среды (Рекомендации):")
-            st.markdown("""
-            1. **Архитектура поддержки (Scaffolding & Контроль):**
-               * Обеспечить полную прозрачность критериев приемки до начала выполнения задания и внедрить ступенчатую помощь в точках затруднений.
-            2. **Плотность и хронометраж контента (Когнитивная нагрузка):**
-               * Декомпозировать неделимые блоки практики на кванты по 15–20 минут и убрать второстепенную теорию из зоны выполнения задачи.
-            3. **Барьеры действия (Трение среды):**
-               * Устранить внешние технические барьеры настройки ПО и обеспечить запуск практики в 1 клик.
-            4. **Безопасность проб (Эмоциональная динамика):**
-               * Спроектировать безопасный разрыв тупиковых петель ошибок без стыдящей коммуникации.
-            """)
-
-# ==============================================================================
-# ВКЛАДКА 3: АНАЛИТИКА И ГИПОТЕЗЫ (ДЛЯ МЕТОДОЛОГОВ И АНАЛИТИКОВ)
-# ==============================================================================
-with tab3:
-    st.subheader("🔬 Доказательная база: Проверка методических гипотез")
-    st.caption("Фокус: исследование системных взаимосвязей между сигналами учебной среды и образовательными результатами курса.")
-
-    col_hyp1, col_hyp2 = st.columns(2)
-
-    with col_hyp1:
-        st.markdown("#### 1. Гипотеза: Разрыв связности ➔ Отвал с модуля")
-        st.caption("**Что мы здесь видим:** Связь между жалобами на связность (MHI Cohesion) и фактическим отчислением с модуля.")
-
-        fig_h1 = go.Figure()
-        fig_h1.add_trace(go.Scatter(
-            x=prod_modules["frag_count"],
-            y=prod_modules["drop_count"],
-            mode="markers+text",
-            text=prod_modules["module_name"].map(lambda x: x.split(":")[0]),
-            textposition="top center",
-            marker=dict(size=14, color="#E74C3C")
-        ))
-        fig_h1.update_layout(
-            xaxis=dict(title="Жалоб на разрыв связности (чел.)"),
-            yaxis=dict(title="Отчислилось с модуля (чел.)"),
-            height=320,
-            margin=dict(t=20, b=20, l=20, r=20)
-        )
-        st.plotly_chart(fig_h1, use_container_width=True)
-
-        with st.expander("💡 Аналитический вывод:"):
-            st.markdown("""
-            * **Подтверждение:** точки с высоким числом жалоб на связность ($\ge 3$ чел.) строго соответствуют модулям с максимальным отсевом (4–7 чел.).
-            * **Решение:** отток студентов не случаен. Он порождается нарушением логической связности между лекцией и домашним заданием.
-            """)
-
-    with col_hyp2:
-        st.markdown("#### 2. Гипотеза: Петли ошибок ➔ Потеря самостоятельности")
-        st.caption("**Что мы здесь видим:** Связь между накоплением тупиковых ошибок на модулях и успехом сдачи итогового кейса.")
-
-        fig_h2 = go.Figure()
-        fig_h2.add_trace(go.Scatter(
-            x=prod_modules["error_loops_3"],
-            y=prod_modules["cor"],
-            mode="markers+text",
-            text=prod_modules["module_name"].map(lambda x: x.split(":")[0]),
-            textposition="top center",
-            marker=dict(size=14, color="#8E44AD")
-        ))
-        fig_h2.update_layout(
-            xaxis=dict(title="Петли ≥ 3 ошибок (инцидентов)"),
-            yaxis=dict(title="Удержание на модуле (COR)", tickformat=".0%"),
-            height=320,
-            margin=dict(t=20, b=20, l=20, r=20)
-        )
-        st.plotly_chart(fig_h2, use_container_width=True)
-
-        with st.expander("💡 Аналитический вывод:"):
-            st.markdown("""
-            * **Подтверждение:** частые серии безуспешных попыток ($\ge 5$ петель) ведут к резкому обвалу удержания до $60–67\%$.
-            * **Решение:** внедрение адаптивных подсказок в тренажер на 2-й ошибке — ключевой рычаг спасения доходимости.
-            """)
-
-    st.markdown("---")
-
-    with st.container(border=True):
-        st.markdown("### 📋 Аналитическое резюме для Методического совета")
-        st.markdown("""
-        1. **MHI Pacing (Спешка) ➔ Академический долг ➔ Отложенный отток:** Студенты бросают курс не в момент возникновения спешки, а накопив несданные дедлайны через 1–2 недели.
-        2. **MHI Cohesion (Хаос) ➔ Тупиковые петли ➔ Срыв контроля:** Непонимание логики задания толкает студента на хаотичные попытки; смещение атрибуции («я не способен учиться») ведет к закрытию платформы.
-        3. **Отсутствие Scaffolding ➔ Обвал $A_{\\text{task}}$:** Недостаток промежуточной поддержки и внезапный скачок сложности на финале разрушают самостоятельность учащегося.
-        """)
+            act_col1, act_col2 = st.columns([1, 4])
+            with act_col1:
+                st.button(f"Взять в работу #{s['id']}", key=f"btn_{s['id']}")
+            with act_col2:
+                st.caption("Фиксирует задачу в CRM со статусом «В работе» и таймером SLA 24 часа.")
